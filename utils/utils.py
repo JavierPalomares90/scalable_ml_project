@@ -6,7 +6,7 @@ import numpy as np
 import os, argparse, time,glob,random
 import pandas as pd
 
-ENGINE_LOGIN=''#TODO: Enter the postgres login
+ENGINE_LOGIN='postgresql+psycopg2://postgres:mlb2018@localhost:5432/' #NOTE for this to work, you need to run the cloud sql proxy using port 5432
 
 def get_engine(engine_login):
     engine = create_engine(engine_login)
