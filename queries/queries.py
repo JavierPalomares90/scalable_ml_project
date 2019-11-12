@@ -23,12 +23,16 @@ from pitcher_finalgames pf
 # list of pitches in a game
 # pass in the gid into the query 
 PITCHES_IN_GAME_QUERY='''
-select p.tfs_zulu, p.type, p.pitch_type, p.start_speed, p.end_speed, p.outcome as outcome_pitch, p.des, p.game_id,
-       ab.pitcher, ab.batter, ab.outcome as outcome_at_bat, ab.event, ab.des,
+select p.tfs_zulu, p.id, p.type, p.pitch_type, p.type_confidence, p.start_speed, p.end_speed, p.spin_rate, p.spin_dir,  
+       p.break_angle, p.break_length, p.break_y, p.x, p.y, p.x0, p.y0, p.z0, p.vx0, p.vy0, p.vz0, p.ax, p.ay, p.az, 
+       p.px, p.pz, p.pfx_x, p.pfx_z, p.sz_top, p.sz_bot, p.zone, p.nasty, p.outcome as outcome_pitch, p.game_id,
+       ab.pitcher, ab.batter, ab.stand, ab.b_height, ab.b, ab.s, ab.o, ab.outcome as outcome_at_bat, ab.score, 
+       ab.home_team_runs, ab.away_team_runs, ab.num as num_at_bat, ab.runner_ids, i.num as num_inning,
        gp.gid, gp.id as player_id, gp.boxname, gp.rl, gp.bats, gp.team_abbrev
 from pitch p
     join game g on p.game_id = g.game_id
     join at_bat ab on p.at_bat_id = ab.at_bat_id
+    join inning i on p.inning_id = i.inning_id
     join game_player gp on ab.pitcher = gp.id
         and g.gid = gp.gid
 where g.gid = '{gid}' 
@@ -39,12 +43,16 @@ order by p.tfs_zulu;
 # pass in the pitcher id
 PITCHES_BY_PITCHER_ID_QUERY='''
 -- all pitches for a specific pitcher
-select p.tfs_zulu, p.type, p.pitch_type, p.start_speed, p.end_speed, p.outcome as outcome_pitch, p.des, p.game_id,
-       ab.pitcher, ab.batter, ab.outcome as outcome_at_bat, ab.event, ab.des,
-       gp.gid, gp.id as player_id, gp.boxname, gp.rl, gp.bats, gp.team_abbrev
+select p.tfs_zulu, p.id, p.type, p.pitch_type, p.type_confidence, p.start_speed, p.end_speed, p.spin_rate, p.spin_dir,  
+       p.break_angle, p.break_length, p.break_y, p.x, p.y, p.x0, p.y0, p.z0, p.vx0, p.vy0, p.vz0, p.ax, p.ay, p.az, 
+       p.px, p.pz, p.pfx_x, p.pfx_z, p.sz_top, p.sz_bot, p.zone, p.nasty, p.outcome as outcome_pitch, p.game_id,
+       ab.pitcher, ab.batter, ab.stand, ab.b_height, ab.b, ab.s, ab.o, ab.outcome as outcome_at_bat, ab.score, 
+       ab.home_team_runs, ab.away_team_runs, ab.num as num_at_bat, ab.runner_ids, i.num as num_inning,      
+       gp.gid, gp.id as player_id, gp.boxname, gp.rl, gp.bats, gp.era, gp.wins, gp.losses, gp.team_abbrev
 from pitch p
     join game g on p.game_id = g.game_id
     join at_bat ab on p.at_bat_id = ab.at_bat_id
+    join inning i on p.inning_id = i.inning_id
     join game_player gp on ab.pitcher = gp.id
         and g.gid = gp.gid
 where gp.id = '{pitcher_id}'
@@ -55,13 +63,19 @@ order by gp.gid, p.tfs_zulu;
 # all pitches for a specific pitcher with batter info
 # 
 PITCHES_WITH_BATTER_INFO_QUERY='''
-select gp.gid, p.tfs_zulu, p.type, p.pitch_type, p.start_speed, p.end_speed, p.outcome as outcome_pitch, p.des,
-       ab.outcome as outcome_at_bat, ab.event, ab.des,
-       gp.id as pitcher_id, gp.boxname as pitcher_boxname, gp.rl as pitcher_rl, gp.bats as pitcher_bats, gp.team_abbrev as pitcher_team,
-       gp2.id as batter_id, gp2.boxname as batter_boxname, gp2.rl as batter_rl, gp2.bats as batter_bats, gp2.team_abbrev as batter_team, gp2.*
+select gp.gid, p.tfs_zulu, p.id, p.type, p.pitch_type, p.type_confidence, p.start_speed, p.end_speed, p.spin_rate, p.spin_dir,  
+       p.break_angle, p.break_length, p.break_y, p.x, p.y, p.x0, p.y0, p.z0, p.vx0, p.vy0, p.vz0, p.ax, p.ay, p.az, 
+       p.px, p.pz, p.pfx_x, p.pfx_z, p.sz_top, p.sz_bot, p.zone, p.nasty, p.outcome as outcome_pitch, p.game_id,
+       ab.pitcher, ab.batter, ab.stand, ab.b_height, ab.b, ab.s, ab.o, ab.outcome as outcome_at_bat, ab.score, 
+       ab.home_team_runs, ab.away_team_runs, ab.num as num_at_bat, ab.runner_ids, i.num as num_inning,      
+       gp.id as pitcher_id, gp.boxname as pitcher_boxname, gp.rl as pitcher_rl, gp.bats as pitcher_bats, 
+       gp.era as pitcher_era, gp.wins as pitcher_wins, gp.losses as pitcher_losses, 
+       gp2.id as batter_id, gp2.boxname as batter_boxname, gp2.rl as batter_rl, gp2.bats as batter_bats, 
+       gp2.avg as batter_avg, gp2.hr as batter_hr, gp2.rbi as batter_rbi, gp2.position as batter_position, gp2.bat_order
 from pitch p
     join game g on p.game_id = g.game_id
     join at_bat ab on p.at_bat_id = ab.at_bat_id
+    join inning i on p.inning_id = i.inning_id
     join game_player gp on ab.pitcher = gp.id
         and g.gid = gp.gid
     join game_player gp2 on ab.batter = gp2.id
