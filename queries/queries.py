@@ -63,9 +63,6 @@ order by gp.gid, p.tfs_zulu;
 # all pitches for a specific pitcher with batter info
 # 
 PITCHES_WITH_BATTER_INFO_QUERY='''
-
-
-
 select pitcher.gid, p.tfs_zulu, p.id, p.type, p.pitch_type, p.type_confidence, p.start_speed, p.end_speed, p.spin_rate, p.spin_dir,  
        p.break_angle, p.break_length, p.break_y, p.x, p.y, p.x0, p.y0, p.z0, p.vx0, p.vy0, p.vz0, p.ax, p.ay, p.az, 
        p.px, p.pz, p.pfx_x, p.pfx_z, p.sz_top, p.sz_bot, p.zone, p.nasty, p.outcome as outcome_pitch, p.game_id,
