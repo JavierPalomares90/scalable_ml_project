@@ -48,17 +48,21 @@ def get_pitches_with_batter(pitcher_id):
 ##
 def drop_columns(df, drop_col_csv_filename):
     drop_df = pd.read_csv(drop_col_csv_filename)
-    df = df.drop(drop_df.columns, 1)  # One (1) is the axis number for columns to drop
+    for col in drop_df.columns:
+        if col in df.columns:
+            df = df.drop(col, 1)  # One (1) is the axis number for columns to drop
     return df
 
 def numericize_columns(df, numeric_col_csv_filename):
     numeric_df = pd.read_csv(numeric_col_csv_filename)
     for col in numeric_df.columns:
-        df[col] = pd.to_numeric(df[col])
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col])
     return df
 
 def categorize_columns(df, categoric_col_csv_filename):
     categoric_df = pd.read_csv(categoric_col_csv_filename)
     for col in categoric_df.columns:
-        df[col] = df[col].astype('category') # Dataframe columns of type object or category are automatic encoded by pd.get_dummys()
+        if col in df.columns:
+            df[col] = df[col].astype('category') # Dataframe columns of type object or category are automatic encoded by pd.get_dummys()
     return df
