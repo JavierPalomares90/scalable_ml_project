@@ -56,3 +56,9 @@ def numericize_columns(df, numeric_col_csv_filename):
     for col in numeric_df.columns:
         df[col] = pd.to_numeric(df[col])
     return df
+
+def categorize_columns(df, categoric_col_csv_filename):
+    categoric_df = pd.read_csv(categoric_col_csv_filename)
+    for col in categoric_df.columns:
+        df[col] = df[col].astype('category') # Dataframe columns of type object or category are automatic encoded by pd.get_dummys()
+    return df
