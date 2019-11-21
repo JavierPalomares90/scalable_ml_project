@@ -66,3 +66,11 @@ def categorize_columns(df, categoric_col_csv_filename):
         if col in df.columns:
             df[col] = df[col].astype('category') # Dataframe columns of type object or category are automatic encoded by pd.get_dummys()
     return df
+
+def save_dataframe(df,filename):
+    df.to_csv(filename)
+    return filename
+
+def load_dataframe(filename):
+    df = pd.read_csv(filename)
+    return df
