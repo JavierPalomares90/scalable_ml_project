@@ -9,19 +9,55 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score,f1_score,recall_score,precision_score
 from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import GridSearchCV
 
 
-def get_binary_classifier_model():
-    #TODO: Complete impl
-    pass
+def get_binary_classifier_model(learning_rate=.1,n_estimators=1000,
+                                max_depth=5,
+                                min_child_weight =1,
+                                gamma = 0,
+                                subsample = 0.8,
+                                colsample_bytree = 0.8,
+                                scale_pos_weight = 1,
+                                metric = 'auc',
+                                seed = 1301,
+                                num_threads=4):
+     objective = 'binary:logistic'
+     return XGBClassifier(learning_rate=learning_rate,
+                     n_estimators=n_estimators,
+                     max_depth=max_depth,
+                     min_child_weight=min_child_weight,
+                     gamma = gamma,
+                     subsample = subsample,
+                     colsample_bytree = colsample_bytree,
+                     objective = objective,
+                     eval_metric = metric,
+                     nthread=num_threads,
+                     scale_pos_weight = scale_pos_weight)
 
-def get_multi_class_classifier_model():
-    #TODO: Complete impl
-    pass
-
-def load_xgboost_model():
-    #TODO: Complete impl
-    pass
+def get_multi_class_classifier_model(learning_rate=.1,
+                    n_estimators=1000,
+                    max_depth=5,
+                    min_child_weight =1,
+                    gamma = 0,
+                    subsample = 0.8,
+                    colsample_bytree = 0.8,
+                    scale_pos_weight = 1,
+                    metric = 'auc',
+                    seed = 1301,
+                    num_threads=4):
+    objective = 'multi:softprob'
+    return XGBClassifier(learning_rate=learning_rate,
+                     n_estimators=n_estimators,
+                     max_depth=max_depth,
+                     min_child_weight=min_child_weight,
+                     gamma = gamma,
+                     subsample = subsample,
+                     colsample_bytree = colsample_bytree,
+                     objective = objective,
+                     eval_metric = metric,
+                     nthread=num_threads,
+                     scale_pos_weight = scale_pos_weight)
 
 def fit_multi_class_model(model, x_train, y_train,x_test,y_test,
              useTrainCV=False, cv_folds=5, early_stopping_rounds=50,save_location=None):
