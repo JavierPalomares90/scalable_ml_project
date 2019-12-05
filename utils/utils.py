@@ -10,8 +10,8 @@ from sklearn.model_selection import train_test_split
 
 
 ENGINE_LOGIN='postgresql+psycopg2://postgres:mlb2018@localhost:5532/' #NOTE for this to work, you need to run the cloud sql proxy using port 5532
-_PITCH_TYPES_ENCODING={'FA':1,'FF':2,'FT':3,'FC':4,'FO':5,'FS':6,'GY':7,'SI':8,'SF':9,'SL':10,'SC':11,'CH':12,'CB':13,'CU':14,'KC':15,'KN':16,'EP':17}
-_PITCH_TYPES_DECODING={1:'FA',2:'FF',3:'FT',4:'FC',5:'FO',6:'FS',7:'GY',8:'SI',9:'SF',10:'SL',11:'SC',12:'CH',13:'CB',14:'CU',15:'KC',16:'KN',17:'EP'}
+_PITCH_TYPES_ENCODING={'FA':1,'FF':2,'FT':3,'FC':4,'FO':5,'FS':6,'GY':7,'SI':8,'SF':9,'SL':10,'SC':11,'CH':12,'CB':13,'CU':14,'KC':15,'KN':16,'EP':17,'IN':18}
+_PITCH_TYPES_DECODING={1:'FA',2:'FF',3:'FT',4:'FC',5:'FO',6:'FS',7:'GY',8:'SI',9:'SF',10:'SL',11:'SC',12:'CH',13:'CB',14:'CU',15:'KC',16:'KN',17:'EP',18:'IN'}
 
 def get_engine(engine_login):
     engine = create_engine(engine_login)
