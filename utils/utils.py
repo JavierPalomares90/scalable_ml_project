@@ -193,6 +193,12 @@ def load_dataframe(filename):
     df = pd.read_csv(filename)
     return df
 
+def drop_pickoffs(df):
+    #pickoffs have pitch_type 'PO'
+    df = df[df.p0_pitch_type != 'PO']
+    df = df[df.p1_pitch_type != 'PO']
+    return df
+
 def split_dataset_into_train_and_test(X,y,test_sz=0.2,rand_state=42):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_sz, random_state=rand_state)
     return X_train, X_test, y_train, y_test  
