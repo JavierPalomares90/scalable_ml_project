@@ -105,6 +105,86 @@ def decode_pitch_types(categories):
     return pitch_types.apply(get_pitch_decoding)
 
 
+default_pd_dtype_map_dict = {
+ 'pitcher_id': 'object',  # Was 'int64',
+ 'team_abbrev': 'object',
+ 'era': 'float64',  # Was 'object',
+ 'wins': 'int64',
+ 'losses': 'int64',
+ 'throws': 'object',
+ 'b1_id': 'object',  # Was 'int64',
+ 'b1_team_id': 'object',
+ 'b1_stand': 'int64',  # Was 'object',
+ 'b1_height': 'int64',
+ 'b1_bats': 'object',
+ 'b1_avg': 'float64',
+ 'b1_hr': 'int64',
+ 'b1_rbi': 'int64',
+ 'b1_bat_order': 'object',  # Was 'float64',
+ 'b1_game_position': 'object',
+ 'p1_pitch_id': 'object',
+ 'p0_pitch_id': 'object',
+ 'p1_pitch_seqno': 'int64',
+ 'p0_pitch_seqno': 'int64',  # Was 'float64',
+ 'p0_inning': 'object',  # Was 'float64',
+ 'result_type': 'object',
+ 'result_type_simple': 'object',
+ 'x': 'float64',
+ 'y': 'float64',
+ 'start_speed': 'float64',
+ 'end_speed': 'float64',
+ 'sz_top': 'float64',
+ 'sz_bot': 'float64',
+ 'pfx_x': 'float64',
+ 'pfx_z': 'float64',
+ 'px': 'float64',
+ 'pz': 'float64',
+ 'x0': 'float64',
+ 'y0': 'float64',
+ 'z0': 'float64',
+ 'vx0': 'float64',
+ 'vy0': 'float64',
+ 'vz0': 'float64',
+ 'ax': 'float64',
+ 'ay': 'float64',
+ 'az': 'float64',
+ 'break_y': 'float64',
+ 'break_angle': 'float64',
+ 'break_length': 'float64',
+ 'p0_pitch_type': 'object',
+ 'type_confidence': 'float64',
+ 'zone': 'object',  # Was 'float64',
+ 'nasty': 'float64',
+ 'spin_dir': 'float64',
+ 'spin_rate': 'float64',
+ 'outcome': 'int64',  # Was 'float64',
+ 'inning': 'object',  # Was 'int64',
+ 'pitch_count_atbat': 'int64',
+ 'pitch_count_team': 'int64',
+ 'balls': 'int64',
+ 'strikes': 'int64',
+ 'outs': 'int64',  # Was 'object',
+ 'is_runner_on_first': 'int64',  # Was 'object',
+ 'is_runner_on_second': 'int64',  # Was 'object',
+ 'is_runner_on_third': 'int64',  # Was 'object',
+ 'runs_pitcher_team': 'int64',  # Was 'object',
+ 'runs_batter_team': 'int64',  # Was 'object',
+ 'p1_pitch_type': 'object'
+}
+
+def set_dtypes(df,dtype_map_dict=None):
+    if dtype_map_dict is None:
+        dtype_map_dict = default_pd_dtype_map_dict
+    # Iterate through dictionary, treating keys as DataFrame column names,
+    #  and associated paired values as intended data type.
+    for col, datatype in dtype_map_dict.items():
+        if col in df.columns:
+            # Make sure column is NULL and/or NaN free, otherwise an error is thrown
+            if not df[col].isnull().any():
+                df[col] = df[col].astype(dtype=datatype)
+    return df
+
+
 def save_dataframe(df,filename):
     df.to_csv(filename)
     return filename
