@@ -43,9 +43,19 @@ def get_pitches_with_batter(pitcher_id):
     conn.close()
     return pitches
 
+def get_pitch_data():
+    engine  = get_engine(ENGINE_LOGIN)
+    conn = get_connection(engine)
+    pitch_data = pd.read_sql(queries.PITCH_DATA_QUERY,conn)
+    return pitch_data
+
 ##
 ## Data Pre-processing Utility Fucntions
 ##
+
+def drop_columns_by_list(df, cols_to_drop):
+    return df.drop(columns=cols_to_drop,axis=1)
+
 def drop_columns(df, drop_col_csv_filename):
     drop_df = pd.read_csv(drop_col_csv_filename)
     for col in drop_df.columns:
@@ -66,6 +76,8 @@ def categorize_columns(df, categoric_col_csv_filename):
         if col in df.columns:
             df[col] = df[col].astype('category') # Dataframe columns of type object or category are automatic encoded by pd.get_dummys()
     return df
+
+
 
 def save_dataframe(df,filename):
     df.to_csv(filename)
