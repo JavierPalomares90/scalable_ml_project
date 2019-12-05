@@ -84,3 +84,7 @@ where pitcher.id = '{pitcher_id}'
 order by pitcher.gid, p.tfs_zulu;
 '''
 
+PITCH_DATA_QUERY='''
+select * from pitch_data_temp;
+'''
+

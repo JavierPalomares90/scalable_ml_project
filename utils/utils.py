@@ -10,6 +10,8 @@ from sklearn.model_selection import train_test_split
 
 
 ENGINE_LOGIN='postgresql+psycopg2://postgres:mlb2018@localhost:5532/' #NOTE for this to work, you need to run the cloud sql proxy using port 5532
+_PITCH_TYPES_ENCODING={'FA':1,'FF':2,'FT':3,'FC':4,'FO':5,'FS':6,'GY':7,'SI':8,'SF':9,'SL':10,'SC':11,'CH':12,'CB':13,'CU':14,'KC':15,'KN':16,'EP':17}
+_PITCH_TYPES_DECODING={1:'FA',2:'FF',3:'FT',4:'FC',5:'FO',6:'FS',7:'GY',8:'SI',9:'SF',10:'SL',11:'SC',12:'CH',13:'CB',14:'CU',15:'KC',16:'KN',17:'EP'}
 
 def get_engine(engine_login):
     engine = create_engine(engine_login)
@@ -46,9 +48,19 @@ def get_pitches_with_batter(pitcher_id):
     conn.close()
     return pitches
 
+def get_pitch_data():
+    engine  = get_engine(ENGINE_LOGIN)
+    conn = get_connection(engine)
+    pitch_data = pd.read_sql(queries.PITCH_DATA_QUERY,conn)
+    return pitch_data
+
 ##
 ## Data Pre-processing Utility Fucntions
 ##
+
+def drop_columns_by_list(df, cols_to_drop):
+    return df.drop(columns=cols_to_drop,axis=1)
+
 def drop_columns(df, drop_col_csv_filename):
     drop_df = pd.read_csv(drop_col_csv_filename)
     for col in drop_df.columns:
@@ -70,9 +82,28 @@ def categorize_columns(df, categoric_col_csv_filename):
             df[col] = df[col].astype('category') # Dataframe columns of type object or category are automatic encoded by pd.get_dummys()
     return df
 
+
 def one_hot_encode(df):
     all_data = pd.get_dummies(df)
     return all_data
+
+# Categorize the pitch_types
+def get_pitch_encoding(pitch_type):
+    if pitch_type is None:
+        return None
+    return _PITCH_TYPES_ENCODING[pitch_type]
+    
+def get_pitch_decoding(num):
+    if pitch_type is None:
+        return None
+    return _PITCH_TYPES_DECODING[num]
+
+def encode_pitch_types(pitch_types):
+    return pitch_types.apply(get_pitch_encoding)
+
+def decode_pitch_types(categories):
+    return pitch_types.apply(get_pitch_decoding)
+
 
 def save_dataframe(df,filename):
     df.to_csv(filename)
