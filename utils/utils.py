@@ -5,6 +5,9 @@ import queries.queries as queries
 import numpy as np
 import os, argparse, time,glob,random
 import pandas as pd
+import matplotlib.pyplot as plt 
+from sklearn.model_selection import train_test_split
+
 
 ENGINE_LOGIN='postgresql+psycopg2://postgres:mlb2018@localhost:5532/' #NOTE for this to work, you need to run the cloud sql proxy using port 5532
 _PITCH_TYPES_ENCODING={'FA':1,'FF':2,'FT':3,'FC':4,'FO':5,'FS':6,'GY':7,'SI':8,'SF':9,'SL':10,'SC':11,'CH':12,'CB':13,'CU':14,'KC':15,'KN':16,'EP':17}
@@ -79,6 +82,11 @@ def categorize_columns(df, categoric_col_csv_filename):
             df[col] = df[col].astype('category') # Dataframe columns of type object or category are automatic encoded by pd.get_dummys()
     return df
 
+
+def one_hot_encode(df):
+    all_data = pd.get_dummies(df)
+    return all_data
+
 # Categorize the pitch_types
 def get_pitch_encoding(pitch_type):
     if pitch_type is None:
@@ -96,6 +104,7 @@ def encode_pitch_types(pitch_types):
 def decode_pitch_types(categories):
     return pitch_types.apply(get_pitch_decoding)
 
+
 def save_dataframe(df,filename):
     df.to_csv(filename)
     return filename
@@ -103,3 +112,7 @@ def save_dataframe(df,filename):
 def load_dataframe(filename):
     df = pd.read_csv(filename)
     return df
+
+def split_dataset_into_train_and_test(X,y,test_size=0.2,random_state=42):
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size,random_state)
+    return X_train, X_test, y_train, y_test  
