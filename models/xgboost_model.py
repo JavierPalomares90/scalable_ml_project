@@ -66,7 +66,7 @@ def fit_multi_class_model(model, x_train, y_train,x_test,y_test,
         xgb_param = model.get_xgb_params()
         xgtrain = xgb.DMatrix(x_train.values, label=y_train)
         cvresult = xgb.cv(xgb_param, xgtrain, 
-                          num_boost_round=alg.get_params()['n_estimators'], nfold=cv_folds, early_stopping_rounds=early_stopping_rounds)
+                          num_boost_round=model.get_params()['n_estimators'], nfold=cv_folds, early_stopping_rounds=early_stopping_rounds)
         model.set_params(n_estimators=cvresult.shape[0])
     
     #Fit the algorithm on the data
