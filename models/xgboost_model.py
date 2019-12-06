@@ -67,7 +67,7 @@ def fit_multi_class_model(model, x_train, y_train,x_test,y_test,
         xgtrain = xgb.DMatrix(x_train.values, label=y_train)
         cvresult = xgb.cv(xgb_param, xgtrain, 
                           num_boost_round=alg.get_params()['n_estimators'], nfold=cv_folds, early_stopping_rounds=early_stopping_rounds)
-        alg.set_params(n_estimators=cvresult.shape[0])
+        model.set_params(n_estimators=cvresult.shape[0])
     
     #Fit the algorithm on the data
     model.fit(x_train, y_train)
@@ -97,12 +97,12 @@ def fit_binary_model(model, x_train, y_train,x_test,y_test,
         xgb_param = model.get_xgb_params()
         xgtrain = xgb.DMatrix(x_train.values, label=y_train)
         cvresult = xgb.cv(xgb_param, xgtrain, 
-                          num_boost_round=alg.get_params()['n_estimators'], nfold=cv_folds,
+                          num_boost_round=model.get_params()['n_estimators'], nfold=cv_folds,
                           metrics='auc', early_stopping_rounds=early_stopping_rounds)
-        alg.set_params(n_estimators=cvresult.shape[0])
+        model.set_params(n_estimators=cvresult.shape[0])
     
     #Fit the algorithm on the data
-    alg.fit(x_train, y_train,eval_metric='auc')
+    model.fit(x_train, y_train,eval_metric='auc')
         
     #Predict training set:
     dtrain_predictions = model.predict(x_train)
