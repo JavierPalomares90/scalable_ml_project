@@ -89,3 +89,8 @@ PITCH_DATA_QUERY='''
 select * from pitch_data LIMIT 10000;
 '''
 
+PITCH_DATA_BY_PITCHER_QUERY='''
+select * from pitch_data 
+where pitch_data.pitcher_id = '{pitcher_id}' 
+order by pitch_data.gid, pitch_data.p1_pitch_seqno;
+'''
