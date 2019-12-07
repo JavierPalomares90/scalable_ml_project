@@ -45,8 +45,9 @@ def get_multi_class_classifier_model(learning_rate=.1,
                     scale_pos_weight = 1,
                     metric = 'auc',
                     seed = 1301,
-                    num_threads=4):
-    objective = 'multi:softprob'
+                    num_threads=4,
+                    objective='multi:softprob'):
+
     return XGBClassifier(learning_rate=learning_rate,
                      n_estimators=n_estimators,
                      max_depth=max_depth,
@@ -64,11 +65,14 @@ def fit_multi_class_model(model, x_train, y_train,x_test,y_test,
     
     if useTrainCV:
         xgb_param = model.get_xgb_params()
-        xgtrain = xgb.DMatrix(x_train.values, label=y_train)
-        cvresult = xgb.cv(xgb_param, xgtrain, 
-                          num_boost_round=model.get_params()['n_estimators'], nfold=cv_folds, early_stopping_rounds=early_stopping_rounds)
+        xgb_param['num_class'] = max(np.unique(y_train))+1
+        xgtrain = xgb.DMatrix(x_train, label=y_train)
+        cvresult = xgb.cv(params=xgb_param, dtrain=xgtrain,
+                          num_boost_round=model.get_params()['n_estimators'],
+                          nfold=cv_folds, early_stopping_rounds=early_stopping_rounds,
+                          stratified=True, metrics={'mlogloss'})
         model.set_params(n_estimators=cvresult.shape[0])
-    
+
     #Fit the algorithm on the data
     model.fit(x_train, y_train)
         
