@@ -29,9 +29,10 @@ _PITCH_TYPES_SIMPLE_ENCODING={'FA':1,'FF':1,   #Four-seam fastball
                               'EP':11, # Eephus
                               'GY':12, # Gyroball
                               'IN':13, 'AB':13, # Intentional/Automatic Ball
-                              'AS':14, #Automatic Strike
-                              'UN':15,'XX':15,'Unknown':15}
-_PITCH_TYPES_SIMPLE_DECODING={1:'FF',2:'FS',3:'FC',4:'SL',5:'SC',6:'CH',7:'CB',8:'KC',9:'KN',10:'FO',11:'EP',12:'GY',13:'IN',14:'AS',15:'UN'}
+                              'AS':14, # Automatic Strike
+                              'PO':15, 'FO':15, # Pitchout
+                              'UN':15,'XX':16,'Unknown':16}
+_PITCH_TYPES_SIMPLE_DECODING={1:'FF',2:'FS',3:'FC',4:'SL',5:'SC',6:'CH',7:'CB',8:'KC',9:'KN',10:'FO',11:'EP',12:'GY',13:'IN',14:'AS',15:'PO',16:'UN'}
 
 
 def get_engine(engine_login):
