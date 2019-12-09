@@ -268,6 +268,87 @@ def drop_unwanted_pitches(df):
     df = df[df.p1_pitch_type != 'Unknown']
     return df
 
+
+def update_base_runners(base_runners, runners_df, at_bat_id):
+    base_set = np.zeros(3, dtype=int)
+    df = runners_df.loc[(runners_df['at_bat_id'] == at_bat_id)].copy()
+    for i in df.index:
+        start_base = df.at[i, 'start_base']
+        end_base = df.at[i, 'end_base']
+        if (end_base > 0) and (end_base < 4):
+            base_runners[end_base-1] = 1
+            base_set[end_base-1] = 1
+        if (start_base > 0) and (start_base < 4):
+            # Only reset base if has not already been set for this at bat
+            if base_set[start_base-1] == 0:
+                base_runners[start_base-1] = 0
+    return base_runners
+
+
+def update_count_and_base_runners(df, runner_df=None):
+    if runner_df is None:
+        print('Retrieving base runner data table...')
+        runner_df = get_all_runner_data()
+        print('Base runner table to DataFrame complete.')
+    MAX_NUM_STRIKES = 2
+    cur_balls = 0
+    cur_strikes = 0
+    cur_outs = 0
+    cur_inning = 0
+    cur_at_bat_id = 0
+    cur_season = 0
+    cur_on_base = np.zeros(3, dtype=int)
+    #
+    # Iterate through all pitch data rows to update the count and base runners
+    #
+    for i in df.index:
+        if pd.isnull(df.at[i, 'at_bat_id']):
+            continue
+        if cur_season != df.at[i, 'season']:
+            cur_season = df.at[i, 'season']
+            print('Starting processing of pitch data for the %d season' % cur_season)
+        #
+        # Reset pitch count when we counter a new at-bat id or inning
+        #
+        if (cur_at_bat_id != df.at[i, 'at_bat_id']) or (cur_inning != df.at[i, 'inning']):
+            prev_at_bat_id = cur_at_bat_id
+            cur_at_bat_id = df.loc[i, 'at_bat_id']
+            cur_balls = 0
+            cur_strikes = 0
+            if cur_inning != df.at[i, 'inning']:
+                cur_inning = df.at[i, 'inning']
+                # No outs or runners on base at the beginning of a new inning
+                cur_outs = 0
+                cur_on_base = np.zeros(3, dtype=int)
+            else:
+                # At transition to new at-bat, update # of outs and base runners
+                if pd.notnull(df.at[i, 'p0_at_bat_o']):
+                    cur_outs = df.at[i, 'p0_at_bat_o']  # Update number of outs from previous at bat
+                cur_on_base = update_base_runners(cur_on_base, runner_df, prev_at_bat_id)
+        else:
+            # Interpret pitch description text to update pitch count of each pitch
+            if pd.notnull(df.at[i, 'p0_pitch_des']):
+                if df.loc[i, 'p0_pitch_des'].lower().find('foul'):
+                    # A batter can't strike outon a foul, so only update strike count if below max
+                    if cur_strikes < MAX_NUM_STRIKES:
+                        cur_strikes += 1
+                elif df.at[i, 'p0_pitch_des'].lower().find('ball'):  # ball, or automatic ball
+                    cur_balls += 1
+                elif df.at[i, 'p0_pitch_des'].lower().find('strike'):  # called strike, or swinging strike
+                    if cur_strikes < MAX_NUM_STRIKES:
+                        cur_strikes += 1
+                    else:  # This should never happen, report error if it does
+                        print('Error: strike out should not be possible at at_bat_id=%s' % cur_at_bat_id)
+        # Finally, Update DataFrame row values
+        df.at[i, 'balls'] = cur_balls
+        df.at[i, 'strikes'] = cur_strikes
+        df.at[i, 'outs'] = cur_outs
+        df.at[i, 'is_runner_on_first'] = cur_on_base[0]
+        df.at[i, 'is_runner_on_second'] = cur_on_base[1]
+        df.at[i, 'is_runner_on_third'] = cur_on_base[2]
+    return df
+
+
 def split_dataset_into_train_and_test(X,y,test_sz=0.2,rand_state=42, do_shuffle=True):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_sz, random_state=rand_state, shuffle=do_shuffle)
     return X_train, X_test, y_train, y_test  
