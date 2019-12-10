@@ -3,6 +3,7 @@ from sqlalchemy.sql import text
 from multiprocessing import Pool as ThreadPool
 import queries.queries as queries
 import numpy as np
+import time
 import os, argparse, time,glob,random
 import pandas as pd
 import matplotlib.pyplot as plt 
@@ -286,6 +287,7 @@ def update_base_runners(base_runners, runners_df, at_bat_id):
 
 
 def update_count_and_base_runners(df, runner_df=None):
+    start_time = time.time()
     if runner_df is None:
         print('Retrieving base runner data table...')
         runner_df = get_all_runner_data()
@@ -298,6 +300,7 @@ def update_count_and_base_runners(df, runner_df=None):
     cur_at_bat_id = 0
     cur_season = 0
     cur_on_base = np.zeros(3, dtype=int)
+    cnt = 0
     #
     # Iterate through all pitch data rows to update the count and base runners
     #
@@ -328,17 +331,21 @@ def update_count_and_base_runners(df, runner_df=None):
         else:
             # Interpret pitch description text to update pitch count of each pitch
             if pd.notnull(df.at[i, 'p0_pitch_des']):
-                if df.loc[i, 'p0_pitch_des'].lower().find('foul'):
-                    # A batter can't strike outon a foul, so only update strike count if below max
+                if df.loc[i, 'p0_pitch_des'].lower().find('foul') >= 0:
+                    # A batter can't strike out on a foul, so only update strike count if below max
                     if cur_strikes < MAX_NUM_STRIKES:
                         cur_strikes += 1
-                elif df.at[i, 'p0_pitch_des'].lower().find('ball'):  # ball, or automatic ball
+                elif df.at[i, 'result_type_simple'] == 'B':  # ball, or automatic ball
                     cur_balls += 1
-                elif df.at[i, 'p0_pitch_des'].lower().find('strike'):  # called strike, or swinging strike
+                elif df.at[i, 'result_type_simple'] == 'S':  # called strike, or swinging strike
                     if cur_strikes < MAX_NUM_STRIKES:
                         cur_strikes += 1
                     else:  # This should never happen, report error if it does
                         print('Error: strike out should not be possible at at_bat_id=%s' % cur_at_bat_id)
+                elif df.at[i, 'result_type_simple'] == 'X':  # in play 
+                    # Nothing to do, outs and base runners are updated on at_bat_id transitions
+                    cur_balls = 0
+                    cur_strikes = 0
         # Finally, Update DataFrame row values
         df.at[i, 'balls'] = cur_balls
         df.at[i, 'strikes'] = cur_strikes
@@ -346,6 +353,11 @@ def update_count_and_base_runners(df, runner_df=None):
         df.at[i, 'is_runner_on_first'] = cur_on_base[0]
         df.at[i, 'is_runner_on_second'] = cur_on_base[1]
         df.at[i, 'is_runner_on_third'] = cur_on_base[2]
+
+        cnt += 1
+        if cnt % 100000 == 0:
+            end_time = time.time()
+            print('Processed %d rows in %f hours...' % (cnt, ((end_time-start_time)/3600.0)))
     return df
 
 
