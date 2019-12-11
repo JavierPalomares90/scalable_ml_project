@@ -1,4 +1,6 @@
 import utils.utils as utils
+import models.nn_model as nn_model
+import keras
 import pandas as pd
 import numpy as np
 
@@ -105,6 +107,21 @@ def get_pitcher_data(pd_train,pd_test,pitcher_id):
     return pd_train_pitcher,pd_test_pitcher
 
 
+def drop_season_pitch_id_cols(pd_train,pd_test):
+    cols_to_drop=['season','pitcher_id']
+    pd_test = utils.drop_columns_by_list(pd_test, cols_to_drop)
+    pd_train = utils.drop_columns_by_list(pd_train, cols_to_drop)
+    return pd_train,pd_test
+
+def get_X_Y(pitch_data,num_pitch_types):
+    X = pitch_data.drop('p1_pitch_type',axis=1)
+    pitch_types = pitch_data.loc[:,'p1_pitch_type']
+    Y = utils.encode_simple_pitch_types(pitch_types)
+    Y = keras.utils.to_categorical(Y ,num_classes=num_pitch_types)
+    return X,Y
+
+
+
 def main():
     pitch_data = get_pitch_data()
     pitch_data = filter_pitch_data(pitch_data)
@@ -123,22 +140,21 @@ def main():
     print('Scherzer pitch data rows: train=%d, test=%d.' % (len(pd_train_scherzer.index), len(pd_test_scherzer.index)))
     print('Porcello pitch data rows: train=%d, test=%d.' % (len(pd_train_porcello.index), len(pd_test_porcello.index)))
 
-    #
     # Lastly drop season and pitch_id columns
-    #
-    cols_to_drop=['season','pitcher_id']
+    pd_train,pd_test = drop_season_pitch_id_cols(pd_train,pd_test)
+    pd_train_verlander,pd_test_verlander = drop_season_pitch_id_cols(pd_train_verlander,pd_test_verlander)
+    pd_train_scherzer,pd_test_scherzer = drop_season_pitch_id_cols(pd_train_scherzer,pd_test_scherzer)
+    pd_train_porcello,pd_test_porcello = drop_season_pitch_id_cols(pd_train_porcello,pd_test_porcello)
 
-    pd_test = utils.drop_columns_by_list(pd_test, cols_to_drop)
-    pd_train = utils.drop_columns_by_list(pd_train, cols_to_drop)
+    # get the NN model
+    num_pitch_types = 16
+    num_cols = len(pd_test_verlander.iloc[0,:])
 
-    pd_test_verlander = utils.drop_columns_by_list(pd_test_verlander, cols_to_drop)
-    pd_train_verlander = utils.drop_columns_by_list(pd_train_verlander, cols_to_drop)
-
-    pd_test_scherzer = utils.drop_columns_by_list(pd_test_scherzer, cols_to_drop)
-    pd_train_scherzer = utils.drop_columns_by_list(pd_train_scherzer, cols_to_drop)
-
-    pd_test_porcello = utils.drop_columns_by_list(pd_test_porcello, cols_to_drop)
-    pd_train_porcello = utils.drop_columns_by_list(pd_train_porcello, cols_to_drop)
+    # train the model for verlander
+    model_verlander = nn_model.get_multi_class_classifier_model(num_cols,num_pitch_types)
+    X_test_verlander,Y_test_verlander = get_X_Y(pd_test_verlander,num_pitch_types)
+    X_train_verlander,Y_train_verlander = get_X_Y(pd_train_verlander,num_pitch_types)
+    score=nn_model.fit_multi_class_model(model_verlander,X_train_verlander,Y_train_verlander,X_test_verlander,Y_test_verlander)
 
 
 if __name__ == '__main__':
