@@ -115,6 +115,8 @@ def drop_season_pitch_id_cols(pd_train,pd_test):
 
 def get_X_Y(pitch_data,num_pitch_types):
     X = pitch_data.drop('p1_pitch_type',axis=1)
+    # one hot encode object columns
+    X = utils.one_hot_encode(X)
     pitch_types = pitch_data.loc[:,'p1_pitch_type']
     Y = utils.encode_simple_pitch_types(pitch_types)
     Y = keras.utils.to_categorical(Y ,num_classes=num_pitch_types)
