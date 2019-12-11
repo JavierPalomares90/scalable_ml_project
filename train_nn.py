@@ -146,14 +146,14 @@ def main():
     pd_train_scherzer,pd_test_scherzer = drop_season_pitch_id_cols(pd_train_scherzer,pd_test_scherzer)
     pd_train_porcello,pd_test_porcello = drop_season_pitch_id_cols(pd_train_porcello,pd_test_porcello)
 
-    # get the NN model
+    # get the NN model for Verlander
+    X_test_verlander,Y_test_verlander = get_X_Y(pd_test_verlander,num_pitch_types)
+    X_train_verlander,Y_train_verlander = get_X_Y(pd_train_verlander,num_pitch_types)
     num_pitch_types = 16
-    num_cols = len(pd_test_verlander.iloc[0,:])
+    num_cols = len(X_test_verlander.iloc[0,:])
 
     # train the model for verlander
     model_verlander = nn_model.get_multi_class_classifier_model(num_cols,num_pitch_types)
-    X_test_verlander,Y_test_verlander = get_X_Y(pd_test_verlander,num_pitch_types)
-    X_train_verlander,Y_train_verlander = get_X_Y(pd_train_verlander,num_pitch_types)
     score=nn_model.fit_multi_class_model(model_verlander,X_train_verlander,Y_train_verlander,X_test_verlander,Y_test_verlander)
 
 
