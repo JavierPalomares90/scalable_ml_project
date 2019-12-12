@@ -1,0 +1,30 @@
+/usr/local/lib/python3.7/dist-packages/numpy/lib/arraysetops.py:568: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
+  mask |= (ar1 == a)
+pitch data loaded
+Removed Null/NaN labeled pitch types rows, filtered 33043 of 2906621 rows at 0.011368%
+Removed rows w/ unwanted pitch types, filtered 5700 of 2873578 rows at 0.001984%
+dropped cols
+added run diff
+added crunch time
+Current number of dataframe Null/NaN values: 4550085
+Current number of dataframe Null/NaN values: 0
+Encoding pitch dataframe of shape (2867878, 53)...
+Pitch dataframe encoding complete. New shape: (2867878, 83)
+Shape of ALL training data set is (2125821, 83)
+Shape of ALL test data set is (742057, 83)
+Verlander pitch data rows: train=10613, test=3256.
+Scherzer pitch data rows: train=10105, test=2657.
+Porcello pitch data rows: train=9762, test=2960.
+
+Model Report
+Accuracy (Train) : 0.9999057759351738
+Accuracy (Test) : 0.5116707616707616
+
+Model Report
+Accuracy (Train) : 1.0
+Accuracy (Test) : 0.48061723748588636
+
+Model Report
+Accuracy (Train) : 1.0
+Accuracy (Test) : 0.36452702702702705
+

@@ -126,7 +126,7 @@ def encode_object_data(pitch_data):
 
     # Drop label colum from pitch dataframe, then one-hot-encode object columns
     pitch_data = pitch_data.drop('p1_pitch_type', axis=1)
-    pitch_data = utils.one_hot_encode(pitch_data)
+    pitch_data = utils.one_hot_encode(pitch_data,False)
 
     # Insert label data back into pitch dataframe
     pitch_data['p1_pitch_type'] = Y_all.copy()
