@@ -71,6 +71,18 @@ def add_run_diff(pitch_data):
     print("added run diff")
     return pitch_data
 
+def add_crunch_time(pitch_data):
+    #
+    # Create new column for crunch time (after 7th inning)
+    #
+    pitch_data['inning'] = pitch_data['inning'].astype(dtype='int64')
+    pitch_data['inning'] = pitch_data['inning'].fillna(0)  # '0' is for unknown inning (Other values are 1-9)
+    pitch_data['crunch_time'] = np.where(pitch_data['inning'] > 7, 1, 0)
+    cols_to_drop=['inning']
+    pitch_data = utils.drop_columns_by_list(pitch_data, cols_to_drop)
+    print("added crunch time")
+    return pitch_data
+
 def replace_nans(pitch_data):
     #
     # Replace Nulls/NaN values that are left in the remaining object columns
@@ -88,7 +100,7 @@ def replace_nans(pitch_data):
 
     pitch_data['throws'] = pitch_data['throws'].fillna('R')  # 'R' is for right handed (Other value is L)
 
-    pitch_data['inning'] = pitch_data['inning'].fillna('0')  # '0' is for unknown inning (Other values are 1-9)
+    #pitch_data['inning'] = pitch_data['inning'].fillna('0')  # '0' is for unknown inning (Other values are 1-9)
 
     print('Current number of dataframe Null/NaN values: %d' % (pitch_data.isnull().sum().sum()))
     #
@@ -119,7 +131,6 @@ def encode_object_data(pitch_data):
 
     # Insert label data back into pitch dataframe
     pitch_data['p1_pitch_type'] = Y_all.copy()
-    pitch_data.head()
 
     print('Pitch dataframe encoding complete. New shape: {}'.format(pitch_data.shape))
     return pitch_data
@@ -157,13 +168,16 @@ def main():
     pitch_data = get_pitch_data()
     pitch_data = filter_pitch_data(pitch_data)
     pitch_data = drop_pitch_types(pitch_data)
+    pitch_data = drop_columns(pitch_data)
     pitch_data = add_run_diff(pitch_data)
+    pitch_data = add_crunch_time(pitch_data)
     # Set intended data types of the remaining columns
     pitch_data = utils.set_dtypes(pitch_data)
+    pitch_data['season'] = pitch_data['season'].astype(dtype='int64')
+    pitch_data['pitcher_id'] = pitch_data['pitcher_id'].astype(dtype='int64')
     pitch_data = replace_nans(pitch_data)
     pitch_data = encode_object_data(pitch_data)
     pd_train,pd_test = split_train_test(pitch_data)
-    pd_train['pitcher_id'] = pd_train['pitcher_id'].astype(dtype='int64')
     # get the data for top 3 pitchers
     pd_train_verlander,pd_test_verlander = get_pitcher_data(pd_train,pd_test,434378)
     pd_train_scherzer,pd_test_scherzer= get_pitcher_data(pd_train,pd_test,453286)
