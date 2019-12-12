@@ -37,7 +37,7 @@ def drop_pitch_types(pitch_data):
     print('Removed rows w/ unwanted pitch types, filtered %d of %d rows at %f%%' % (filter_diff, pre_filter_rows, filter_pcnt))
     return pitch_data
 
-def drop_columns(pitchd_data):
+def drop_columns(pitch_data):
     #
     # Drop unwanted dataset columns 
     # 
@@ -47,14 +47,16 @@ def drop_columns(pitchd_data):
                     'inning_id','half_inning_id','at_bat_id','gid','b1_id','b1_team_id',
                     'team_abbrev']
     pitch_data = utils.drop_columns_by_list(pitch_data,id_cols_to_drop)
-        # Pitch data columns to drop
-    pitch_cols_to_drop=['p0_pitch_seqno','p1_pitch_seqno','p0_inning','result_type',
-                        'type_confidence','p0_at_bat_o','p0_pitch_des','nasty',
-                        'x','y','sz_top','sz_bot','pfx_x','pfx_z','px','pz',
-                        'x0','y0','z0','vx0','vy0','vz0','ax','ay','az','break_y']
-    pitch_data = utils.drop_columns_by_list(pitch_data,pitch_cols_to_drop)
-    opt_pitch_cols_to_drop=['pitch_count_atbat','pitch_count_team','start_speed','spin_dir']
-    pitch_data = utils.drop_columns_by_list(pitch_data,opt_pitch_cols_to_drop)
+    # Pitch data columns to drop
+    pitch_cols_to_drop = ['p0_pitch_seqno', 'p1_pitch_seqno', 'p0_inning', 'result_type',
+                          'type_confidence', 'p0_at_bat_o', 'p0_pitch_des', 'nasty']
+    pitch_data = utils.drop_columns_by_list(pitch_data, pitch_cols_to_drop)
+
+    # Optional pitchf/x data columns to drop
+    #pitchfx_cols_to_drop = ['pitch_count_atbat', 'pitch_count_team', 'start_speed', 'spin_dir',
+    #                        'x', 'y', 'sz_top', 'sz_bot', 'pfx_x', 'pfx_z', 'px', 'pz',
+    #                        'x0', 'y0', 'z0', 'vx0', 'vy0', 'vz0', 'ax', 'ay', 'az', 'break_y']
+    #pitch_data = utils.drop_columns_by_list(pitch_data, pitchfx_cols_to_drop)
 
     print("dropped cols")
     return pitch_data
@@ -73,31 +75,61 @@ def replace_nans(pitch_data):
     #
     # Replace Nulls/NaN values that are left in the remaining object columns
     #
-    pitch_data['p0_pitch_type'] = pitch_data['p0_pitch_type'].fillna('NP') # 'NP' is for No Pitch
+    #
+    # Replace Nulls/NaN values that are left in the remaining object columns
+    #
+    pitch_data['p0_pitch_type'] = pitch_data['p0_pitch_type'].fillna('NP')  # 'NP' is for No Pitch
 
-    pitch_data['result_type_simple'] = pitch_data['result_type_simple'].fillna('X') # 'X' is for in play 
+    pitch_data['result_type_simple'] = pitch_data['result_type_simple'].fillna('X')  # 'X' is for in play
 
     pitch_data['b1_game_position'] = pitch_data['b1_game_position'].fillna('Unknown')
 
-    pitch_data['b1_bats'] = pitch_data['b1_bats'].fillna('R') # 'R' is for right handed (Other values are L or S)
+    pitch_data['b1_bats'] = pitch_data['b1_bats'].fillna('R')  # 'R' is for right handed (Other values are L or S)
 
-    pitch_data['throws'] = pitch_data['throws'].fillna('R') # 'R' is for right handed (Other value is L)
+    pitch_data['throws'] = pitch_data['throws'].fillna('R')  # 'R' is for right handed (Other value is L)
+
+    pitch_data['inning'] = pitch_data['inning'].fillna('0')  # '0' is for unknown inning (Other values are 1-9)
 
     print('Current number of dataframe Null/NaN values: %d' % (pitch_data.isnull().sum().sum()))
     #
     # Fill the rest of Null/NaN values with zero in numeric columns
     #
-    pitch_data = pitch_data.fillna(0)
+    replace_dict = {'nasty': 0, 'x': 0, 'y': 0, 'sz_top': 0, 'sz_bot': 0, 'pfx_x': 0, 'pfx_z': 0,
+                    'px': 0, 'pz': 0, 'x0': 0, 'y0': 0, 'z0': 0, 'vx0': 0, 'vy0': 0, 'vz0': 0,
+                    'ax': 0, 'ay': 0, 'az': 0, 'break_y': 0, 'break_angle': 0, 'break_length': 0,
+                    'start_speed': 0, 'end_speed': 0, 'zone': 0, 'outcome': 0, 'spin_rate': 0,
+                    'spin_dir': 0, 'pitch_count_at_bat': 0, 'pitch_count_team': 0,
+                    'wins': 0, 'losses': 0, 'b1_bat_order': 0}
+    pitch_data = pitch_data.fillna(value=replace_dict)
 
     print('Current number of dataframe Null/NaN values: %d' % (pitch_data.isnull().sum().sum()))
+
+    return pitch_data
+
+def encode_object_data(pitch_data):
+    print('Encoding pitch dataframe of shape {}...'.format(pitch_data.shape))
+
+    # Split label column from rest of pitch dataframe then encode
+    Y_all = pitch_data.loc[:, 'p1_pitch_type'].copy()
+    Y_all = utils.encode_simple_pitch_types(Y_all)
+
+    # Drop label colum from pitch dataframe, then one-hot-encode object columns
+    pitch_data = pitch_data.drop('p1_pitch_type', axis=1)
+    pitch_data = utils.one_hot_encode(pitch_data)
+
+    # Insert label data back into pitch dataframe
+    pitch_data['p1_pitch_type'] = Y_all.copy()
+    pitch_data.head()
+
+    print('Pitch dataframe encoding complete. New shape: {}'.format(pitch_data.shape))
     return pitch_data
 
 def split_train_test(pitch_data):
     pd_train = pitch_data[pitch_data['season']!=2019].copy()
     pd_test = pitch_data[pitch_data['season']==2019].copy()
 
-    print('Shape of training data set is {}'.format(pd_train.shape))
-    print('Shape of test data set is {}'.format(pd_test.shape))
+    print('Shape of ALL training data set is {}'.format(pd_train.shape))
+    print('Shape of ALL test data set is {}'.format(pd_test.shape))
 
     return pd_train,pd_test
 
@@ -114,11 +146,8 @@ def drop_season_pitch_id_cols(pd_train,pd_test):
     return pd_train,pd_test
 
 def get_X_Y(pitch_data,num_pitch_types):
-    X = pitch_data.drop('p1_pitch_type',axis=1)
-    # one hot encode object columns
-    X = utils.one_hot_encode(X)
-    pitch_types = pitch_data.loc[:,'p1_pitch_type']
-    Y = utils.encode_simple_pitch_types(pitch_types)
+    X = pitch_data.drop('p1_pitch_type',axis=1).copy()
+    Y = pitch_data.loc[:,'p1_pitch_type'].copy()
     Y = keras.utils.to_categorical(Y ,num_classes=num_pitch_types)
     return X,Y
 
@@ -132,6 +161,7 @@ def main():
     # Set intended data types of the remaining columns
     pitch_data = utils.set_dtypes(pitch_data)
     pitch_data = replace_nans(pitch_data)
+    pitch_data = encode_object_data(pitch_data)
     pd_train,pd_test = split_train_test(pitch_data)
     pd_train['pitcher_id'] = pd_train['pitcher_id'].astype(dtype='int64')
     # get the data for top 3 pitchers
