@@ -29,8 +29,10 @@ def get_multi_class_classifier_model(num_inputs,num_outputs):
 
     return model
 
-def fit_multi_class_model(model,x_train,y_train,x_test,y_test,num_epochs=200,batch_sz=1024,set_verbose=0,num_splits=10,set_shuffle=True):
+def fit_multi_class_model(model,x_train,y_train,x_test,y_test,num_epochs=200,batch_sz=1024,set_verbose=0,num_splits=10,set_shuffle=True,save_location=None):
 
     model.fit(x_train,y_train,epochs = num_epochs, batch_size = batch_sz)
     score = model.evaluate(x_test,y_test,batch_size=batch_sz)
+    if(save_location is not None):
+        model.save(save_location)
     return score

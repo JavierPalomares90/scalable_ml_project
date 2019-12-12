@@ -193,14 +193,34 @@ def main():
     pd_train_porcello,pd_test_porcello = drop_season_pitch_id_cols(pd_train_porcello,pd_test_porcello)
 
     num_pitch_types = 16
-    # get the NN model for Verlander
+    # get the NN data for Verlander
     X_test_verlander,Y_test_verlander = get_X_Y(pd_test_verlander,num_pitch_types)
     X_train_verlander,Y_train_verlander = get_X_Y(pd_train_verlander,num_pitch_types)
     num_cols = len(X_test_verlander.iloc[0,:])
 
     # train the model for verlander
     model_verlander = nn_model.get_multi_class_classifier_model(num_cols,num_pitch_types)
-    score=nn_model.fit_multi_class_model(model_verlander,X_train_verlander,Y_train_verlander,X_test_verlander,Y_test_verlander)
+    score=nn_model.fit_multi_class_model(model_verlander,X_train_verlander,Y_train_verlander,X_test_verlander,Y_test_verlander,save_location='verlander.h5')
+
+    # get the NN data for scherzer
+    X_test_scherzer,Y_test_scherzer = get_X_Y(pd_test_scherzer,num_pitch_types)
+    X_train_scherzer,Y_train_scherzer = get_X_Y(pd_train_scherzer,num_pitch_types)
+    num_cols = len(X_test_scherzer.iloc[0,:])
+
+    # train the model for scherzer 
+    model_scherzer = nn_model.get_multi_class_classifier_model(num_cols,num_pitch_types)
+    score=nn_model.fit_multi_class_model(model_scherzer,X_train_scherzer,Y_train_scherzer,X_test_scherzer,Y_test_scherzer,save_location='scherzer.h5')
+
+    # get the NN data for porcello 
+    X_test_porcello ,Y_test_porcello= get_X_Y(pd_test_porcello,num_pitch_types)
+    X_train_porcello,Y_train_porcello= get_X_Y(pd_train_porcello,num_pitch_types)
+    num_cols = len(X_test_porcello.iloc[0,:])
+
+    # train the model for porcello 
+    model_porcello = nn_model.get_multi_class_classifier_model(num_cols,num_pitch_types)
+    score=nn_model.fit_multi_class_model(model_porcello,X_train_porcello,Y_train_porcello,X_test_porcello,Y_test_porcello,save_location='porcello.h5')
+
+
 
 
 if __name__ == '__main__':
