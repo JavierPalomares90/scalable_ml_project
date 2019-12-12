@@ -113,7 +113,7 @@ def categorize_columns(df, categoric_col_csv_filename):
 
 
 def one_hot_encode(df):
-    all_data = pd.get_dummies(df)
+    all_data = pd.get_dummies(df, sparse=True)
     return all_data
 
 # Categorize the pitch_types
