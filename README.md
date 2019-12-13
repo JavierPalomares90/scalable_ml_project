@@ -1,4 +1,5 @@
 # MLB Pitch Prediction
+![Verlander - Houston Chronicle](/verlander.jpg)
 ## Introduction
 In the sport of baseball, America’s pastime, the game is won or lost based on the matchup of the pitcher and batter. A typical Major League Baseball (MLB) pitcher has numerous pitch types (like the fastball, curveball, cutter, sinker, etc.) and strike zone locations at their disposal to keep the batter guessing. For each batter, knowing the type of pitch thrown next by the pitcher would be a huge advantage as the hitter can appropriately time the setup of his swing and increase the likelihood of a statistical hit.
  
