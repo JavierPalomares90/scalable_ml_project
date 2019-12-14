@@ -61,11 +61,11 @@ def get_multi_class_classifier_model(nclasses=16,learning_rate=.1,
                      scale_pos_weight = scale_pos_weight,num_classes=nclasses)
 
 def fit_multi_class_model(model, x_train, y_train,x_test,y_test,
-             useTrainCV=False, cv_folds=5, early_stopping_rounds=50,save_location=None):
+             useTrainCV=False, cv_folds=5, early_stopping_rounds=50,save_location=None,nclass=16):
     
     if useTrainCV:
         xgb_param = model.get_xgb_params()
-        xgb_param['num_class'] = max(np.unique(y_train))+1
+        xgb_param['num_class'] = 16
         xgtrain = xgb.DMatrix(x_train, label=y_train)
         cvresult = xgb.cv(params=xgb_param, dtrain=xgtrain,
                           num_boost_round=model.get_params()['n_estimators'],
