@@ -58,7 +58,7 @@ def get_multi_class_classifier_model(nclasses=16,learning_rate=.1,
                      objective = objective,
                      eval_metric = metric,
                      nthread=num_threads,
-                     scale_pos_weight = scale_pos_weight,num_classes=nclasses)
+                     scale_pos_weight = scale_pos_weight,num_class=nclasses)
 
 def fit_multi_class_model(model, x_train, y_train,x_test,y_test,
              useTrainCV=False, cv_folds=5, early_stopping_rounds=50,save_location=None,nclass=16):
