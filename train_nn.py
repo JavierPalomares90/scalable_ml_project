@@ -3,6 +3,10 @@ import models.nn_model as nn_model
 import keras
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import multilabel_confusion_matrix 
+from sklearn.metrics import accuracy_score 
+from sklearn.metrics import classification_report 
 
 
 
@@ -162,7 +166,65 @@ def get_X_Y(pitch_data,num_pitch_types):
     Y = keras.utils.to_categorical(Y ,num_classes=num_pitch_types)
     return X,Y
 
+def get_model_metrics(model,X_test,Y_test,num_pitch_types,pitcher_name):
+    Y_pred = model.predict_classes(X_test, verbose=1)
+    Y_pred_prob = model.predict(X_test, verbose=1)
+    actual = np.argmax(Y_test, axis=1)
+    pred = Y_pred
+    print('Y_test unique values={}'.format(np.unique(actual)))
+    print('Y_pred unique values={}'.format(np.unique(pred)))
+    cm = multilabel_confusion_matrix(actual, pred) 
+    print('Confusion Matrix :')
+    print(cm) 
+    print('Accuracy Score :',accuracy_score(actual, pred)) 
+    print('Report : ')
+    print(classification_report(actual, pred))
+    '''
+    #
+    # Create and save confusion matrix figure
+    #
+    normalize = True
+    title='{} Confusion Matrix'.format(pitcher_name)
+    label_names = [ 'UN','FF','FS','FC',
+                    'SL','SC','CH','CB',
+                    'KC','KN','FO','EP',
+                    'GY','IN','AS','PO']
+    print('Target names: {}'.format(label_names))
+    
+    cmap = plt.get_cmap('Blues')
+    plt.figure(figsize=(8, 6))
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
 
+    if target_names is not None:
+        tick_marks = np.arange(len(target_names))
+        plt.xticks(tick_marks, target_names, rotation=45)
+        plt.yticks(tick_marks, target_names)
+
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+
+    thresh = cm.max() / 1.5 if normalize else cm.max() / 2
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        if normalize:
+            plt.text(j, i, "{:0.4f}".format(cm[i, j]),
+                     horizontalalignment="center",
+                     color="white" if cm[i, j] > thresh else "black")
+        else:
+            plt.text(j, i, "{:,}".format(cm[i, j]),
+                     horizontalalignment="center",
+                     color="white" if cm[i, j] > thresh else "black")
+
+
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label\naccuracy={:0.4f}; misclass={:0.4f}'.format(accuracy, misclass))
+
+    cm_name = 'ConfusionMatrix{}'.format(pitcher_name)
+    plt.savefig(cn_name,format='png')
+    '''
+    return None
 
 def main():
     pitch_data = get_pitch_data()
@@ -201,6 +263,11 @@ def main():
     # train the model for verlander
     model_verlander = nn_model.get_multi_class_classifier_model(num_cols,num_pitch_types)
     score=nn_model.fit_multi_class_model(model_verlander,X_train_verlander,Y_train_verlander,X_test_verlander,Y_test_verlander,save_location='verlander.h5')
+    print('Verlander model training complete with score: {}'.format(score))
+
+    print('Verlander model model metrics for predicting 2019 season data..: {}'.format(score))
+    get_model_metrics(model_verlander,X_test_verlander,Y_test_verlander,num_pitch_types,'Verlander')
+    print()
 
     # get the NN data for scherzer
     X_test_scherzer,Y_test_scherzer = get_X_Y(pd_test_scherzer,num_pitch_types)
@@ -210,6 +277,11 @@ def main():
     # train the model for scherzer 
     model_scherzer = nn_model.get_multi_class_classifier_model(num_cols,num_pitch_types)
     score=nn_model.fit_multi_class_model(model_scherzer,X_train_scherzer,Y_train_scherzer,X_test_scherzer,Y_test_scherzer,save_location='scherzer.h5')
+    print('Scherzer model training complete with score: {}'.format(score))
+
+    print('Scherzer model model metrics for predicting 2019 season data..: {}'.format(score))
+    get_model_metrics(model_scherzer,X_test_scherzer,Y_test_scherzer,num_pitch_types,'Scherzer')
+    print()
 
     # get the NN data for porcello 
     X_test_porcello ,Y_test_porcello= get_X_Y(pd_test_porcello,num_pitch_types)
@@ -219,8 +291,21 @@ def main():
     # train the model for porcello 
     model_porcello = nn_model.get_multi_class_classifier_model(num_cols,num_pitch_types)
     score=nn_model.fit_multi_class_model(model_porcello,X_train_porcello,Y_train_porcello,X_test_porcello,Y_test_porcello,save_location='porcello.h5')
+    print('Porcello model training complete with score: {}'.format(score))
 
+    print('Porcello model model metrics for predicting 2019 season data..: {}'.format(score))
+    get_model_metrics(model_porcello,X_test_porcello,Y_test_porcello,num_pitch_types,'Porcello')
+    print()
+"""
+    # get the NN data for all pitch data 
+    X_test_all ,Y_test_all= get_X_Y(pd_test,num_pitch_types)
+    X_train_all,Y_train_all= get_X_Y(pd_train,num_pitch_types)
+    num_cols = len(X_test_all.iloc[0,:])
 
+    # train the model for porcello 
+    model_all = nn_model.get_multi_class_classifier_model(num_cols,num_pitch_types)
+    score=nn_model.fit_multi_class_model(model_all,X_train_all,Y_train_all,X_test_all,Y_test_all,save_location='all_pd.h5')
+"""
 
 
 if __name__ == '__main__':
