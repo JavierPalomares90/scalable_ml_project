@@ -35,7 +35,7 @@ def get_binary_classifier_model(learning_rate=.1,n_estimators=1000,
                      nthread=num_threads,
                      scale_pos_weight = scale_pos_weight)
 
-def get_multi_class_classifier_model(learning_rate=.1,
+def get_multi_class_classifier_model(nclasses=16,learning_rate=.1,
                     n_estimators=1000,
                     max_depth=5,
                     min_child_weight =1,
@@ -43,7 +43,7 @@ def get_multi_class_classifier_model(learning_rate=.1,
                     subsample = 0.8,
                     colsample_bytree = 0.8,
                     scale_pos_weight = 1,
-                    metric = 'auc',
+                    metric = 'mlogloss',
                     seed = 1301,
                     num_threads=4,
                     objective='multi:softprob'):
@@ -58,14 +58,14 @@ def get_multi_class_classifier_model(learning_rate=.1,
                      objective = objective,
                      eval_metric = metric,
                      nthread=num_threads,
-                     scale_pos_weight = scale_pos_weight)
+                     scale_pos_weight = scale_pos_weight,num_class=nclasses)
 
 def fit_multi_class_model(model, x_train, y_train,x_test,y_test,
-             useTrainCV=False, cv_folds=5, early_stopping_rounds=50,save_location=None):
+             useTrainCV=False, cv_folds=5, early_stopping_rounds=50,save_location=None,nclass=16):
     
     if useTrainCV:
         xgb_param = model.get_xgb_params()
-        xgb_param['num_class'] = max(np.unique(y_train))+1
+        xgb_param['num_class'] = 16
         xgtrain = xgb.DMatrix(x_train, label=y_train)
         cvresult = xgb.cv(params=xgb_param, dtrain=xgtrain,
                           num_boost_round=model.get_params()['n_estimators'],
