@@ -3,6 +3,7 @@ import keras
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation
 from keras.optimizers import SGD
+from keras.optimizers import Adam
 from keras.wrappers.scikit_learn import KerasClassifier
 from keras.utils import np_utils
 from sklearn.model_selection import cross_val_score
@@ -26,8 +27,9 @@ def get_multi_class_classifier_model(num_inputs,num_outputs):
     model.add(Dense(num_outputs, activation='softmax'))
     # Compile model
     sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+    adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
     model.compile(loss='categorical_crossentropy',
-                optimizer=sgd,
+                optimizer=adam,
                 metrics=['accuracy'])
 
     return model
@@ -38,4 +40,4 @@ def fit_multi_class_model(model,x_train,y_train,x_test,y_test,num_epochs=200,bat
     score = model.evaluate(x_test,y_test,batch_size=batch_sz)
     if(save_location is not None):
         model.save(save_location)
-    return score
+    return score, model
