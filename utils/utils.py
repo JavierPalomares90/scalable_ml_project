@@ -23,7 +23,7 @@ _PITCH_TYPES_SIMPLE_ENCODING={'FA':1,'FF':1,   #Four-seam fastball
                               'SL':4, # Slider
                               'SC':5, # Screwball
                               'CH':6, # Changeup
-                              'CB':7,'CU':14, # Curveball
+                              'CB':7,'CU':7, # Curveball
                               'KC':8, # Knuck Curve
                               'KN':9, # Knuckleball
                               'FO':10, # Forkball
@@ -32,7 +32,7 @@ _PITCH_TYPES_SIMPLE_ENCODING={'FA':1,'FF':1,   #Four-seam fastball
                               'IN':13, 'AB':13, # Intentional/Automatic Ball
                               'AS':14, # Automatic Strike
                               'PO':15, 'FO':15, # Pitchout
-                              'UN':15,'XX':16,'Unknown':16}
+                              'UN':16,'XX':16,'Unknown':16}
 _PITCH_TYPES_SIMPLE_DECODING={1:'FF',2:'FS',3:'FC',4:'SL',5:'SC',6:'CH',7:'CB',8:'KC',9:'KN',10:'FO',11:'EP',12:'GY',13:'IN',14:'AS',15:'PO',16:'UN'}
 
 
