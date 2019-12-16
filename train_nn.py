@@ -4,6 +4,7 @@ import keras
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from imblearn.over_sampling import SMOTE
 from sklearn.metrics import confusion_matrix 
 from sklearn.metrics import multilabel_confusion_matrix 
 from sklearn.metrics import accuracy_score 
@@ -58,10 +59,10 @@ def drop_columns(pitch_data):
     pitch_data = utils.drop_columns_by_list(pitch_data, pitch_cols_to_drop)
 
     # Optional pitchf/x data columns to drop
-    pitchfx_cols_to_drop = ['pitch_count_atbat', 'pitch_count_team', 'start_speed', 'spin_dir',
-                            'x', 'y', 'sz_top', 'sz_bot', 'pfx_x', 'pfx_z', 'px', 'pz',
-                            'x0', 'y0', 'z0', 'vx0', 'vy0', 'vz0', 'ax', 'ay', 'az', 'break_y']
-    pitch_data = utils.drop_columns_by_list(pitch_data, pitchfx_cols_to_drop)
+    #pitchfx_cols_to_drop = ['pitch_count_atbat', 'pitch_count_team', 'start_speed', 'spin_dir',
+    #                        'x', 'y', 'sz_top', 'sz_bot', 'pfx_x', 'pfx_z', 'px', 'pz',
+    #                        'x0', 'y0', 'z0', 'vx0', 'vy0', 'vz0', 'ax', 'ay', 'az', 'break_y']
+    #pitch_data = utils.drop_columns_by_list(pitch_data, pitchfx_cols_to_drop)
 
     print("dropped cols")
     return pitch_data
@@ -167,6 +168,15 @@ def get_X_Y(pitch_data,num_pitch_types):
     Y = keras.utils.to_categorical(Y ,num_classes=num_pitch_types)
     return X,Y
 
+def synthetically_balance_data(X, Y_cat, num_pitch_types):
+    smote = SMOTE('not majority')
+    print('Feature dataset shape pre-SMOTE: {}'.format(X.shape))
+    Y = np.argmax(Y_cat, axis = 1)
+    X_sm, Y_sm = smote.fit_sample(X, Y)
+    Y_sm_cat = keras.utils.to_categorical(Y_sm ,num_classes=num_pitch_types)
+    print('Feature dataset shape post-SMOTE: {}'.format(X_sm.shape))
+    return X_sm, Y_sm_cat
+
 def get_model_metrics(model,X_test,Y_test,num_pitch_types,pitcher_name):
     Y_pred = model.predict_classes(X_test, verbose=1)
     Y_pred_prob = model.predict(X_test, verbose=1)
@@ -177,13 +187,13 @@ def get_model_metrics(model,X_test,Y_test,num_pitch_types,pitcher_name):
     print('Y_pred_prob unique values={}'.format(np.unique(Y_pred_prob)))
     cm = confusion_matrix(actual, pred) 
     cm_ml = multilabel_confusion_matrix(actual, pred) 
-    print('Confusion Matrix :')
-    print(cm) 
     print('Multilabel Confusion Matrix :')
     print(cm_ml) 
-    print('Accuracy Score :',accuracy_score(actual, pred)) 
+    print('Confusion Matrix :')
+    print(cm) 
     print('Report : ')
     print(classification_report(actual, pred))
+    print('Accuracy Score :',accuracy_score(actual, pred)) 
     '''
     #
     # Create and save confusion matrix figure
@@ -284,6 +294,7 @@ def main():
     pd_train_porcello,pd_test_porcello = drop_season_pitch_id_cols(pd_train_porcello,pd_test_porcello)
 
     # get the NN data for Verlander
+    print('Justin Verlander (id=434378):')
     X_test_verlander,Y_test_verlander = get_X_Y(pd_test_verlander,num_pitch_types)
     X_train_verlander,Y_train_verlander = get_X_Y(pd_train_verlander,num_pitch_types)
     num_cols = len(X_test_verlander.iloc[0,:])
@@ -294,10 +305,34 @@ def main():
             X_train_verlander,Y_train_verlander,
             X_test_verlander,Y_test_verlander,
             save_location='verlander.h5')
+    print()
     print('Verlander model training complete with score: {}'.format(score))
-
-    print('Verlander model model metrics for predicting 2019 season data..: {}'.format(score))
+    print('Verlander model model metrics for predicting 2019 season data...')
     get_model_metrics(model_verlander,X_test_verlander,Y_test_verlander,num_pitch_types,'Verlander')
+    print()
+
+    model_verlander_cw = nn_model.get_multi_class_classifier_model(num_cols,num_pitch_types)
+    score,model_verlander_cw=nn_model.fit_multi_class_model(model_verlander_cw,
+            X_train_verlander,Y_train_verlander,
+            X_test_verlander,Y_test_verlander,
+            weight_classes=True, save_location='verlander_cw.h5')
+    print()
+    print('Verlander (cw) model training complete with score: {}'.format(score))
+    print('Verlander (cw) model model metrics for predicting 2019 season data...')
+    get_model_metrics(model_verlander_cw,X_test_verlander,Y_test_verlander,num_pitch_types,'Verlander')
+    print()
+
+    X_train_verlander_sm,Y_train_verlander_sm = synthetically_balance_data(
+            X_train_verlander, Y_train_verlander, num_pitch_types)
+    model_verlander_sm = nn_model.get_multi_class_classifier_model(num_cols,num_pitch_types)
+    score,model_verlander_sm=nn_model.fit_multi_class_model(model_verlander_sm,
+            X_train_verlander_sm,Y_train_verlander_sm,
+            X_test_verlander,Y_test_verlander,
+            weight_classes=True,save_location='verlander_sm.h5')
+    print()
+    print('Verlander (sm) model training complete with score: {}'.format(score))
+    print('Verlander (sm) model model metrics for predicting 2019 season data...')
+    get_model_metrics(model_verlander_sm,X_test_verlander,Y_test_verlander,num_pitch_types,'Verlander')
     print()
 
     # get the NN data for scherzer
@@ -306,18 +341,44 @@ def main():
     num_cols = len(X_test_scherzer.iloc[0,:])
 
     # train the model for scherzer 
+    print('Max Scherzer (pitcher_id=453286):')
     model_scherzer = nn_model.get_multi_class_classifier_model(num_cols,num_pitch_types)
     score,model_scherzer=nn_model.fit_multi_class_model(model_scherzer,
             X_train_scherzer,Y_train_scherzer,
             X_test_scherzer,Y_test_scherzer,
             save_location='scherzer.h5')
+    print()
     print('Scherzer model training complete with score: {}'.format(score))
-
-    print('Scherzer model model metrics for predicting 2019 season data..: {}'.format(score))
+    print('Scherzer model model metrics for predicting 2019 season data...')
     get_model_metrics(model_scherzer,X_test_scherzer,Y_test_scherzer,num_pitch_types,'Scherzer')
     print()
 
+    model_scherzer_cw = nn_model.get_multi_class_classifier_model(num_cols,num_pitch_types)
+    score,model_scherzer_cw=nn_model.fit_multi_class_model(model_scherzer_cw,
+            X_train_scherzer,Y_train_scherzer,
+            X_test_scherzer,Y_test_scherzer,
+            weight_classes=True,save_location='scherzer_cw.h5')
+    print()
+    print('Scherzer (cw) model training complete with score: {}'.format(score))
+    print('Scherzer (cw) model model metrics for predicting 2019 season data...')
+    get_model_metrics(model_scherzer_cw,X_test_scherzer,Y_test_scherzer,num_pitch_types,'Scherzer')
+    print()
+
+    X_train_scherzer_sm,Y_train_scherzer_sm = synthetically_balance_data(
+            X_train_scherzer, Y_train_scherzer, num_pitch_types)
+    model_scherzer_sm = nn_model.get_multi_class_classifier_model(num_cols,num_pitch_types)
+    score,model_scherzer_sm=nn_model.fit_multi_class_model(model_scherzer_sm,
+            X_train_scherzer_sm,Y_train_scherzer_sm,
+            X_test_scherzer,Y_test_scherzer,
+            weight_classes=True,save_location='scherzer_sm.h5')
+    print()
+    print('Scherzer (sm) model training complete with score: {}'.format(score))
+    print('Scherzer (sm) model model metrics for predicting 2019 season data...')
+    get_model_metrics(model_scherzer_sm,X_test_scherzer,Y_test_scherzer,num_pitch_types,'Scherzer')
+    print()
+
     # get the NN data for porcello 
+    print('Rick Porcello (pitcher_id=519144):')
     X_test_porcello ,Y_test_porcello= get_X_Y(pd_test_porcello,num_pitch_types)
     X_train_porcello,Y_train_porcello= get_X_Y(pd_train_porcello,num_pitch_types)
     num_cols = len(X_test_porcello.iloc[0,:])
@@ -328,11 +389,37 @@ def main():
             X_train_porcello,Y_train_porcello,
             X_test_porcello,Y_test_porcello,
             save_location='porcello.h5')
+    print()
     print('Porcello model training complete with score: {}'.format(score))
-
-    print('Porcello model model metrics for predicting 2019 season data..: {}'.format(score))
+    print('Porcello model model metrics for predicting 2019 season data...')
     get_model_metrics(model_porcello,X_test_porcello,Y_test_porcello,num_pitch_types,'Porcello')
     print()
+
+    model_porcello_cw = nn_model.get_multi_class_classifier_model(num_cols,num_pitch_types)
+    score,model_porcello_cw=nn_model.fit_multi_class_model(model_porcello_cw,
+            X_train_porcello,Y_train_porcello,
+            X_test_porcello,Y_test_porcello,
+            weight_classes=True,save_location='porcello_cw.h5')
+    print()
+    print('Porcello (cw) model training complete with score: {}'.format(score))
+    print('Porcello (cw) model model metrics for predicting 2019 season data...')
+    get_model_metrics(model_porcello_cw,X_test_porcello,Y_test_porcello,num_pitch_types,'Porcello')
+    print()
+
+    X_train_porcello_sm,Y_train_porcello_sm = synthetically_balance_data(
+            X_train_porcello, Y_train_porcello, num_pitch_types)
+    model_porcello_sm = nn_model.get_multi_class_classifier_model(num_cols,num_pitch_types)
+    score,model_porcello_sm=nn_model.fit_multi_class_model(model_porcello_sm,
+            X_train_porcello_sm,Y_train_porcello_sm,
+            X_test_porcello,Y_test_porcello,
+            weight_classes=True,save_location='porcello_sm.h5')
+    print()
+    print('Porcello (sm) model training complete with score: {}'.format(score))
+    print('Porcello (sm) model model metrics for predicting 2019 season data...')
+    get_model_metrics(model_porcello_sm,X_test_porcello,Y_test_porcello,num_pitch_types,'Porcello')
+    print()
+
+    return 
 
     # get the NN data for all pitch data 
     X_test_all ,Y_test_all= get_X_Y(pd_test,num_pitch_types)
